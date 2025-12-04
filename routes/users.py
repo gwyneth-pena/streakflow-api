@@ -17,6 +17,8 @@ def create_user(payload: UserCreate, db: Session = Depends(get_db)):
     hasher = PasswordHasher()
     hashed_password = hasher.hash(payload.password)
     payload.password = hashed_password
+    
     save_user(payload, db)
     del payload.password
+
     return {"user": payload.model_dump()}
