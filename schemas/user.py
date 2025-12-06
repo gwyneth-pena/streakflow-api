@@ -23,3 +23,9 @@ class UserCreate(BaseModel):
         elif method == 'email' and password is not None: 
             values.identifier = values.email
         return values
+    
+
+class UserLogin(BaseModel):
+    method: str
+    identifier: str
+    password: Optional[str] = None

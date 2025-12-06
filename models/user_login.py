@@ -11,6 +11,7 @@ class UserLogin(Base):
     method = Column(String(50), nullable=False)
     identifier = Column(String(300), nullable=False)
     password = Column(String(200), nullable=True)
+    last_login_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
     updated_at = Column(DateTime(timezone=True), nullable=False,server_default=func.now(), onupdate=func.now())
 
