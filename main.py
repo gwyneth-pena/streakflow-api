@@ -23,6 +23,6 @@ Base.metadata.create_all(bind=engine)
 
 @app.get("/")
 def home():
-    return {"message": "Welcome to SteakFlow API - track your daily habit streaks with ease."}
+    return {"message": "Welcome to StreakChain API - track your daily habit streaks with ease."}
 
 app.include_router(users.router)
