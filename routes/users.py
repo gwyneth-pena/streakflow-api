@@ -2,9 +2,7 @@ from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 from db import get_db
 from models.user import User
-from models.user_login import UserLogin
 from schemas.user import UserCreate, UserSignIn
-from argon2 import PasswordHasher
 from services.users import authenticate_user, save_user
 from utils.shared import create_jwt, validation_error
 
@@ -27,14 +25,9 @@ def create_user(payload: UserCreate, response: Response, db: Session = Depends(g
             if login.method == 'email' and login.identifier == payload.identifier
         ]
         has_user_login = len(filtered_user_logins) > 0
-        if has_user_login:
+        if has_user_login and payload.method == 'email':
             validation_error("email", "Email already exists.", "email")
     
-    if payload.password:
-        hasher = PasswordHasher()
-        hashed_password = hasher.hash(payload.password)
-        payload.password = hashed_password
-
     user = save_user(payload, db)
 
     if user:

@@ -1,5 +1,6 @@
 
 from typing import Optional
+from argon2 import PasswordHasher
 from pydantic import model_validator
 
 from schemas.shared import TrimmedBaseModel
@@ -13,13 +14,26 @@ class UserCreate(TrimmedBaseModel):
     identifier: Optional[str] = None
     token: Optional[str] = None
 
+    @model_validator(mode='before')
+    def normalize_fields(cls, values):
+        if values.get("identifier"):
+            values["identifier"] = values["identifier"].lower()
+
+        if values.get("email"):
+            values["email"] = values["email"].lower()
+
+        if values.get("method"):
+            values["method"] = values["method"].lower()
+
+        if values.get("firstname"):
+            values["firstname"] = values["firstname"].title()
+
+        if values.get("lastname"):
+            values["lastname"] = values["lastname"].title()
+        return values
+
     @model_validator(mode='after')
-    def check_method(cls, values):
-        values.identifier = values.identifier.lower() if values.identifier else None
-        values.firstname = values.firstname.title()
-        values.lastname = values.lastname.title()
-        values.method = values.method.lower()
-        values.email = values.email.lower() if values.email else None
+    def validate_fields(cls, values):
 
         method = values.method
         email = values.email
@@ -37,6 +51,11 @@ class UserCreate(TrimmedBaseModel):
         else:
             if not token:
                 raise ValueError(f'{method} auth method requires a token.')
+            
+        if values.password:
+            hasher = PasswordHasher()
+            hashed_password = hasher.hash(values.password)
+            values.password = hashed_password
             
         return values
     
