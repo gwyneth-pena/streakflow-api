@@ -16,19 +16,31 @@ def save_user(payload: UserCreate, db: Session):
         payload.firstname = decoded_google_token.get('given_name')
         payload.lastname = decoded_google_token.get('family_name')
 
-        user_login = db.query(UserLogin).filter(
-            UserLogin.method == payload.method,
-            UserLogin.identifier == payload.identifier
-        ).first()
-
-        if user_login is not None:
-            return user_login.user
+    
+    user = (
+        db.query(User)
+        .join(User.logins)
+        .filter(
+                User.is_active == True,
+                User.email == payload.email,
+            )
+        .first()
+    )
         
-    user = db.query(User).filter(User.email == payload.email).first()
-
     if user is None:
         user = User(firstname=payload.firstname, lastname=payload.lastname, email=payload.email)
     
+    has_user_login = False
+    if user:
+        filtered_user_logins = [
+            login for login in user.logins
+            if login.method == payload.method and login.identifier == payload.identifier
+        ]
+        has_user_login = len(filtered_user_logins) > 0
+
+    if has_user_login:
+        return user
+
     user_login = UserLogin(
         user=user,
         method=payload.method,
