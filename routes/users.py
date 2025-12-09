@@ -4,7 +4,7 @@ from db import get_db
 from models.user import User
 from schemas.user import UserCreate, UserSignIn
 from services.users import authenticate_user, save_user
-from utils.shared import create_jwt, validation_error
+from utils.shared import create_jwt_cookie, validation_error
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -31,8 +31,7 @@ def create_user(payload: UserCreate, response: Response, db: Session = Depends(g
     user = save_user(payload, db)
 
     if user:
-        jwt_token = create_jwt({"user_id": user.id})
-        response.set_cookie(key="jwt", value=jwt_token, httponly=True, max_age=60*60)
+        create_jwt_cookie(response, {"user_id": user.id})
 
     return {"message": "User created successfully."}
 
@@ -44,8 +43,6 @@ def login_user(payload: UserSignIn, response: Response, db: Session = Depends(ge
     if not user_login['is_authenticated']:
         validation_error("credentials", "Invalid credentials.", "credentials", 401)
 
-    jwt_token = create_jwt({"user_id": user_login['data'].user_id})
-
-    response.set_cookie(key="jwt", value=jwt_token, httponly=True, max_age=60*60)
-
+    create_jwt_cookie(response, {"user_id": user_login['data'].user_id})
+    
     return {"message": "Login successful."}

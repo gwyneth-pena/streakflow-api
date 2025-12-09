@@ -1,6 +1,6 @@
 
 
-from fastapi import HTTPException
+from fastapi import HTTPException, Response
 from argon2 import PasswordHasher
 import jwt
 from datetime import datetime, timedelta
@@ -43,9 +43,13 @@ def decode_jwt(token: str):
 
 def decode_and_verify_google_token(token: str):
     google_client_id = GOOGLE_CLIENT_ID
-    
+
     try:
         decoded_token = id_token.verify_oauth2_token(token, requests.Request(), google_client_id)
         return decoded_token
     except Exception as e:
         validation_error("token", "Invalid Google token.", "token.invalid", status=401)
+
+def create_jwt_cookie(response: Response, data: dict, expires_in_minutes: int = 60):
+    jwt_token = create_jwt(data, expires_in_minutes)
+    response.set_cookie(key="jwt", value=jwt_token, httponly=True, max_age=expires_in_minutes*60)
